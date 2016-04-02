@@ -45,7 +45,9 @@ def get_adjusted_cor_matrix(cor):
         Asset returns correlation matrix
 
     returns
-
+    -------
+    pandas.DataFrame
+        adjusted correlation matrix
     """
     values = cor.values.flatten()
     mu = np.mean(values)
