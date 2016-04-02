@@ -73,7 +73,7 @@ def get_current_allocations(context, data):
     returns
     -------
     pandas.Series
-
+        current allocations as a percent of total liquidity
 
     """
     holdings = get_current_holdings(context, data)
