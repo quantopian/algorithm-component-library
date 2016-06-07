@@ -22,7 +22,6 @@ from quantopian.pipeline.data import morningstar
 from quantopian.pipeline.factors import CustomFactor
 from quantopian.research import run_pipeline
 from quantopian.pipeline.data.builtin import USEquityPricing
-fundamentals = init_fundamentals()
 
 
 class SPY_proxy(CustomFactor):
@@ -60,13 +59,16 @@ def standard_frame_compute(df):
 
     parameters
     ----------
-    df: pandas.DataFrame
+    df: numpy.array
         full result of Data_Pull
 
     returns
     -------
-    pandas.DataFrame
+    numpy.array
         standardized Data_Pull results
+
+    numpy.array
+        index of equities
     """
 
     # basic clean of dataset to remove infinite values
@@ -80,51 +82,49 @@ def standard_frame_compute(df):
     # to store standardization values
     df_SPY = df_SPY.head(500)
 
-    # create a dataframe to store the
-    # mean and stdev values from each column
-    column_list = ['data set', 'mean', 'stdev']
-    SPY_stats = pd.DataFrame(columns=column_list)
+    # get dataframes into numpy array
+    df_SPY = df_SPY.as_matrix()
 
-    # create pandas dataframe to standardize the universe
-    index_no = 0
-    for column in df_SPY:
-        data = {'data set':  df_SPY[column].name,
-                'mean': df_SPY[column].mean(),
-                'stdev': df_SPY[column].std()}
-        iter_frame = pd.DataFrame(data, index=[index_no])
-        SPY_stats = SPY_stats.append(iter_frame)
-        index_no += 1
+    # store index values
+    index = df.index.values
+    df = df.as_matrix()
 
-    # loop through each column and use the appropriate
-    # values from SPY_stats to standardize
-    df_standard = pd.DataFrame()
-    for i, row in SPY_stats.iterrows():
-        if row['data set'] != 'SPY Proxy':
-            col = pd.Series(
-                            data=((df[row['data set']] -
-                                    row['mean']) /
-                                    row['stdev']),
-                            name=row['data set'])
+    df_standard = np.empty(df.shape[0])
 
-            # apply filter
-            col = col.apply(
-                            lambda x: (filter_fn(x) /
-                            (float(len(df_SPY.count(axis=0)) - 1))))
+    for col_SPY, col_full in zip(df_SPY.T, df.T):
 
-            # add standardized and filtered dataset to the final df
-            df_standard = pd.concat([df_standard, col], axis=1)
+        # summary stats for S&P500
+        mu = np.mean(col_SPY)
+        sigma = np.std(col_SPY)
+        col_standard = np.array(((col_full - mu) / sigma))
 
-    return df_standard
+        # create vectorized function (lambda equivalent)
+        fltr = np.vectorize(filter_fn)
+        col_standard = (fltr(col_standard))
+
+        # make range between -10 and 10
+        col_standard = (col_standard / df.shape[1])
+
+        # attach calculated values as new row in df_standard
+        df_standard = np.vstack((df_standard, col_standard))
+
+    # get rid of first entry (empty scores)
+    df_standard = np.delete(df_standard, 0, 0)
+
+    return (df_standard, index)
 
 
-def composite_score(df):
+def composite_score(df, index):
     """
     Summarize standardized data in a single number.
 
     parameters
     ----------
-    df: pandas.DataFrame
+    df: numpy.array
         standardized results
+
+    index: numpy.array
+        index of equities
 
     returns
     -------
@@ -134,7 +134,11 @@ def composite_score(df):
     """
 
     # sum up transformed data
-    df_composite = pd.Series(data=df.sum(axis=1))
+    df_composite = df.sum(axis=0)
+
+    # put into a pandas dataframe and connect numbers
+    # to equities via reindexing
+    df_composite = pd.Series(data=df_composite, index=index)
 
     # sort descending
     df_composite.sort(ascending=False)
