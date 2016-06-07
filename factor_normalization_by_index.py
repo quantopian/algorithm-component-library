@@ -22,7 +22,6 @@ from quantopian.pipeline.data import morningstar
 from quantopian.pipeline.factors import CustomFactor
 from quantopian.research import run_pipeline
 from quantopian.pipeline.data.builtin import USEquityPricing
-fundamentals = init_fundamentals()
 
 
 class SPY_proxy(CustomFactor):
