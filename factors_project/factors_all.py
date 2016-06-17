@@ -710,6 +710,30 @@ class Factors:
                 betas.append(col_cov[0, 1] / col_cov[1, 1])
             out[:] = betas
 
+    # 3-month Volatility
+    class Vol_3M(CustomFactor):
+        """
+        3-month Volatility:
+
+        Standard deviation of returns over 3 months
+        http://www.morningstar.com/invglossary/historical_volatility.aspx
+
+        Notes:
+        High Value suggests that equity price fluctuates wildly
+        """
+
+        inputs = [USEquityPricing.close]
+        window_length = 63
+
+        def compute(self, today, assets, out, close):
+
+            vols = []
+            for col in close.T:
+                # compute returns
+                log_col_returns = np.log(col / np.roll(col, 1))[1:]
+                vols.append(np.nanstd(log_col_returns))
+            out[:] = vols
+
     """GROWTH"""
 
     # 3-month Sales Growth
