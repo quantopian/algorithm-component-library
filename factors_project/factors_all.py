@@ -1222,3 +1222,33 @@ class Factors:
 
                 mfvs.append(numerator / denominator)
             out[:] = mfvs
+
+
+    """TECHNICALS"""
+
+
+    # Merton's Distance to Default 
+    class Mertons_DD(CustomFactor):
+        """
+        Merton's Distance to Default:
+
+        Application the BS Formula with assets as S_t and liabilities as the strike
+        https://www.bostonfed.org/bankinfo/conevent/slowdown/groppetal.pdf
+
+        Notes:
+        Lower value suggests increased default risk of company issuing equity
+        """
+        inputs = [morningstar.balance_sheet.total_assets, \
+                      morningstar.balance_sheet.total_liabilities, libor.value, USEquityPricing.close]
+        window_length = 252
+        
+        def compute(self, today, assets, out, tot_assets, tot_liabilities, r, close):
+            mertons = []
+            
+            for col_assets, col_liabilities, col_r, col_close in zip(tot_assets.T, tot_liabilities.T,
+                                                                    r.T, close.T):
+                vol_1y = np.nanstd(col_close)
+                numerator = np.log(col_assets[-1] / col_liabilities[-1]) + ((252*col_r[-1]) - ((vol_1y**2)/2))
+                mertons.append(numerator / vol_1y)
+                
+            out[:] = mertons
