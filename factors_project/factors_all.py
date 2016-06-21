@@ -25,6 +25,7 @@ from quantopian.pipeline.factors import CustomFactor, SimpleMovingAverage, Avera
 from quantopian.pipeline.filters.morningstar import IsPrimaryShare
 from quantopian.pipeline.data import morningstar as mstar
 from quantopian.pipeline.classifiers.morningstar import Sector
+from quantopian.pipeline.data.quandl import fred_usdontd156n as libor
 
 
 class Factors:
