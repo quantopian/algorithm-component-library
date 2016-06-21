@@ -255,7 +255,7 @@ class Factors:
 
     """MOMENTUM"""
 
-    # Percent Above 260d Low
+    # Percent Above 260-day Low
     class Percent_Above_Low(CustomFactor):
         """
         Percent Above 260-Day Low:
@@ -279,6 +279,33 @@ class Factors:
                 # metric for each security
                 percent_above = ((col[-1] - min(col)) / min(col)) * 100
                 secs.append(percent_above)
+            out[:] = secs
+
+    # Percent Below 260-day High
+    class Percent_Below_High(CustomFactor):
+        """
+        Percent Below 260-Day High:
+
+        Percentage decrease in close price between today and highest close price 
+        in 260-day lookback window.
+        https://www.math.nyu.edu/faculty/avellane/Lo13030.pdf
+        DB QCD (unsure if public?)
+
+        Notes:
+        Low value suggests momentum
+        """
+        inputs = [USEquityPricing.close]
+        window_length = 260
+
+        def compute(self, today, assets, out, close):
+
+            # array to store values of each security
+            secs = []
+
+            for col in close.T:
+                # metric for each security
+                percent_below = ((col[-1] - max(col)) / max(col)) * 100
+                secs.append(percent_below)
             out[:] = secs
 
     # 4/52 Price Oscillator
@@ -1223,11 +1250,9 @@ class Factors:
                 mfvs.append(numerator / denominator)
             out[:] = mfvs
 
-
     """TECHNICALS"""
 
-
-    # Merton's Distance to Default 
+    # Merton's Distance to Default
     class Mertons_DD(CustomFactor):
         """
         Merton's Distance to Default:
@@ -1238,17 +1263,18 @@ class Factors:
         Notes:
         Lower value suggests increased default risk of company issuing equity
         """
-        inputs = [morningstar.balance_sheet.total_assets, \
-                      morningstar.balance_sheet.total_liabilities, libor.value, USEquityPricing.close]
+        inputs = [morningstar.balance_sheet.total_assets,
+                  morningstar.balance_sheet.total_liabilities, libor.value, USEquityPricing.close]
         window_length = 252
-        
+
         def compute(self, today, assets, out, tot_assets, tot_liabilities, r, close):
             mertons = []
-            
+
             for col_assets, col_liabilities, col_r, col_close in zip(tot_assets.T, tot_liabilities.T,
-                                                                    r.T, close.T):
+                                                                     r.T, close.T):
                 vol_1y = np.nanstd(col_close)
-                numerator = np.log(col_assets[-1] / col_liabilities[-1]) + ((252*col_r[-1]) - ((vol_1y**2)/2))
+                numerator = np.log(
+                    col_assets[-1] / col_liabilities[-1]) + ((252 * col_r[-1]) - ((vol_1y**2) / 2))
                 mertons.append(numerator / vol_1y)
-                
+
             out[:] = mertons
