@@ -1340,5 +1340,5 @@ FACTORS = {
     'Vol 3M': Factors.Vol_3M,
     'Working Capital to Assets': Factors.Working_Capital_To_Assets,
     'Working Capital to Sales': Factors.Working_Capital_To_Sales,
-    
+
 }
