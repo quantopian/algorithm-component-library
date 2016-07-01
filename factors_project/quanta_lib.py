@@ -214,6 +214,74 @@ class Quantalib:
 		return fast - slow
 
 
+	class ATR(CustomFactor):
+	    """
+		Average True Range TODO: DEVIATES FROM TALIB AS DIFFERENT AVERAGE USED
+
+		Momentum indicator
+
+		**Default Inputs:** USEquityPricing.high, USEquityPricing.low, USEquityPricing.close
+
+		**Default Window Length:** 15 (14+1)
+
+		https://en.wikipedia.org/wiki/Average_true_range
+	    """
+	    inputs=[USEquityPricing.high, USEquityPricing.low, USEquityPricing.close]
+	    window_length = 15
+	    
+	    def compute(self, today, assets, out, high, low, close):
+	        
+	        tr_frame = trange_helper(high, low, close)
+	        decay_rate= 2./(len(tr_frame) + 1.)
+	        weights = np.full(len(tr_frame), decay_rate, float) ** np.arange(len(tr_frame) + 1, 1, -1)
+	        out[:] = np.average(tr_frame, axis=0, weights=weights)
+
+
+	class BETA(CustomFactor):
+		"""
+		Market Beta (returns)
+
+		**Default Inputs:** USEquityPricing.close
+
+		**Default Window Length:** 6
+
+		https://en.wikipedia.org/wiki/Beta_(finance)
+	    """
+	    
+	    inputs=[USEquityPricing.close]
+	    window_length = 6
+	    
+	    def compute(self, today, assets, out, close):
+
+	    	# get returns dataset
+	        returns = ((close - np.roll(close, 1, axis=0)) / np.roll(close, 1, axis=0))[1:]
+
+	        # get index of benchmark
+	        benchmark_index = np.where((assets == 8554) == True)[0][0]
+
+	        # get returns of benchmark
+	        benchmark_returns = returns[:, benchmark_index]
+	        
+	        # prepare X matrix (x_is - x_bar)
+	        X = benchmark_returns
+	        X_bar = np.nanmean(X)
+	        X_vector = X - X_bar
+	        X_matrix = np.tile(X_vector, (len(returns.T), 1)).T
+
+	        # prepare Y matrix (y_is - y_bar)
+	        Y_bar = np.nanmean(close, axis=0)
+	        Y_bars = np.tile(Y_bar, (len(returns), 1))
+	        Y_matrix = returns - Y_bars
+
+	        # prepare variance of X
+	        X_var = np.nanvar(X)
+
+	        # multiply X matrix an Y matrix and sum (dot product)
+	        # then divide by variance of X
+	        # this gives the MLE of Beta
+	        out[:] = (np.sum((X_matrix * Y_matrix), axis=0) / X_var) / (len(returns))
+
+
 	class BOP(CustomFactor):
 		"""
 		Balance of Power
