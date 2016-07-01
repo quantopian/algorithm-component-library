@@ -15,6 +15,7 @@ import math
 from quantopian.pipeline.data.builtin import USEquityPricing
 from quantopian.pipeline.factors import CustomFactor, EWMA
 
+
 class Quantalib:
 
 	"""
@@ -47,7 +48,6 @@ class Quantalib:
 
     	# matrix of positive directional movement
     	return np.where(((high_diff > 0) | (low_diff > 0)) & (high_diff > low_diff), high_diff, 0.)
-
 
 	def minus_dm_helper(high, low):
 		"""
