@@ -757,3 +757,20 @@ class Quantalib:
 		"""
 	    def compute(self, today, assets, out, data):
 	        out[:] = np.nanvar(data, axis=0)
+
+
+	class WILLR(CustomFactor):
+		"""
+		Typical Price 
+
+		**Default Inputs:**  USEquityPricing.high, USEquityPricing.low, USEquityPricing.close
+
+		**Default Window Length:** 14
+
+		http://www.fmlabs.com/reference/default.htm?url=WilliamsR.htm
+		"""    	    
+	    inputs = [USEquityPricing.high, USEquityPricing.low, USEquityPricing.close]
+	    window_length = 14
+	    
+	    def compute(self, today, assets, out, high, low, close):
+	        out[:] = (np.nanmax(high, axis=0) - close[-1]) / (np.nanmax(high, axis=0) - np.nanmin(low, axis=0)) * -100.
