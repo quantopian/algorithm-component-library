@@ -301,6 +301,37 @@ class Quantalib:
 	        out[:] = (close - open) / (high - low)
 
 
+	class CCI(CustomFactor):
+	    """
+		Commodity Channel Index
+
+		Momentum indicator
+
+		**Default Inputs:** USEquityPricing.close, USEquityPricing.high, USEquityPricing.low
+
+		**Default Window Length:** 14
+
+		http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:commodity_channel_index_cci
+	    """
+	    
+	    inputs = [USEquityPricing.high, USEquityPricing.low, USEquityPricing.close]
+	    window_length = 14
+	    
+	    def compute(self, today, assets, out, high, low, close):
+	        
+	        # typical price matrix
+	        typical_prices = (high + low + close) / 3.
+
+	        # mean of each column
+	        mean_typical = np.nanmean(typical_prices, axis=0)
+	        
+	        # mean deviation
+	        mean_deviation = np.sum(np.abs(typical_prices - np.tile(mean_typical, (len(typical_prices), 1))), axis=0) / self.window_length
+
+	        # CCI
+	        out[:] = (typical_prices[-1] - mean_typical) / (.015 * mean_deviation)
+
+
     class CMO(CustomFactor):
 		"""
 		Chande Momentum Oscillator
