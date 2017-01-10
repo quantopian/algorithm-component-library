@@ -35,26 +35,26 @@ def shrink_covariance_matrix(x, shrink=None):
 
     [t, n] = np.shape(cov)
     meanx = cov.mean(axis=0)
-    cov = cov - np.tile(meanx, (t, 1))
+    cov = cov - np.tile(meanx, (t, 1.))
 
-    sample = (1.0 / t) * np.dot(cov.T, cov)
+    sample = (1. / t) * np.dot(cov.T, cov)
 
     var = np.diag(sample)
     sqrtvar = np.sqrt(var)
 
-    a = np.tile(sqrtvar, (n, 1))
-    rho = (sum(sum(sample / (a * a.T))) - n) / (n * (n - 1))
+    a = np.tile(sqrtvar, (n, 1.))
+    rho = (sum(sum(sample / (a * a.T))) - n) / (n * (n - 1.))
 
     prior = rho * (a * a.T)
-    prior[np.eye(t, n) == 1] = var
+    prior[np.eye(t, n) == 1.] = var
 
     # Frobenius-norm of matrix cov, sqrt(sum(diag(dot(cov.T, cov))))
-    c = np.linalg.norm(sample - prior, 'fro') ** 2
-    y = cov ** 2.0
-    p = np.dot((1.0 / t), sum(sum(np.dot(y.T, y)))) - sum(sum(sample ** 2.0))
-    rdiag = np.dot((1.0 / t), sum(sum(y ** 2.0))) - sum(var ** 2.0)
-    v = np.dot((cov ** 3.0).T, cov) / t - (var * sample).T
-    v[np.eye(t, n) == 1] = 0.0
+    c = np.linalg.norm(sample - prior, 'fro') ** 2.
+    y = cov ** 2.
+    p = np.dot((1. / t), sum(sum(np.dot(y.T, y)))) - sum(sum(sample ** 2.))
+    rdiag = np.dot((1. / t), sum(sum(y ** 2.))) - sum(var ** 2.)
+    v = np.dot((cov ** 3.).T, cov) / t - (var * sample).T
+    v[np.eye(t, n) == 1.] = 0.
     roff = sum(sum(v * (a / a.T)))
     r = rdiag + np.dot(rho, roff)
 
@@ -63,8 +63,8 @@ def shrink_covariance_matrix(x, shrink=None):
         shrinkage = shrink
     else:
         k = (p - r) / c
-        shrinkage = max(0.0, min(1.0, k / t))
+        shrinkage = max(0., min(1., k / t))
 
-    sigma = np.dot(shrinkage, prior) + np.dot((1 - shrinkage), sample)
+    sigma = np.dot(shrinkage, prior) + np.dot((1. - shrinkage), sample)
 
     return sigma, shrinkage
